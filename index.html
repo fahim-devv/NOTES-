@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Vault - Secret Code Sync & Owner Access</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+    }
+    
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- APP HEADER -->
+  <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="window.location.reload()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+          <i class="fa-solid fa-vault text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-indigo-300 via-indigo-100 to-white bg-clip-text text-transparent">
+            Cloud Vault Pro
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">Multi-Device Sync & Secret Media Store</p>
+        </div>
+      </div>
+
+      <!-- Active Vault Status & Owner Badge -->
+      <div class="flex items-center space-x-2.5 sm:space-x-4">
+        
+        <div id="ownerBadge" class="hidden items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-amber-300 text-xs px-3 py-1.5 rounded-full font-semibold shadow-inner animate-pulse">
+          <i class="fa-solid fa-crown text-amber-400"></i>
+          <span class="hidden sm:inline">OWNER MODE</span>
+        </div>
+
+        <div id="vaultStatusBadge" class="hidden sm:flex items-center space-x-2 bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs px-3 py-1.5 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Vault: <strong id="activeVaultCodeDisplay" class="font-mono tracking-wider text-white">---</strong></span>
+        </div>
+
+        <button id="switchVaultBtn" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-xl transition-all duration-200 flex items-center space-x-2 shadow-md shadow-indigo-600/20">
+          <i class="fa-solid fa-key text-xs"></i>
+          <span id="switchBtnText">Vault Switch</span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- HERO / QUICK ADD SECTION -->
+    <div class="mb-8 p-6 rounded-2xl glass border border-slate-800 shadow-xl relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+            <i class="fa-solid fa-shield-halved text-indigo-400 text-2xl"></i>
+            <span id="welcomeTitle">Apnar Personal Multi-Device Cloud Vault</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed max-w-2xl">
+            Ekta secret code set korun. Oi eki code die je kono device (Mobile, Laptop) theke note, photo ebon video direct access korun.
+          </p>
+        </div>
+
+        <button id="openNewModalBtn" class="w-full md:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold px-5 py-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2.5 shadow-lg shadow-emerald-600/25 shrink-0 active:scale-98">
+          <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+          <span>Notun Note / Media Add Korun</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- OWNER DASHBOARD (Visible when Promo Code 'fahimlikes69' is active) -->
+    <div id="ownerPanel" class="hidden mb-8 p-6 rounded-2xl border border-amber-500/30 bg-amber-950/20 backdrop-blur-md shadow-2xl relative overflow-hidden">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-amber-500/20">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shadow-inner border border-amber-500/30">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-lg text-amber-300">Owner Access Dashboard</h3>
+            <p class="text-xs text-amber-200/70">Shob active secret vault codes ebong data overview.</p>
+          </div>
+        </div>
+        <button id="refreshOwnerVaults" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Refresh Vault List</span>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-900/80 uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="p-3.5 font-semibold">Vault Code</th>
+              <th class="p-3.5 font-semibold">Total Item Count</th>
+              <th class="p-3.5 font-semibold">Status</th>
+              <th class="p-3.5 font-semibold text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="ownerVaultsTableList" class="divide-y divide-slate-800/60">
+            <!-- Dynamic Vault Codes Rendered Here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONTROLS & SEARCH -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      
+      <!-- Filter Tabs -->
+      <div class="flex bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 w-full sm:w-auto shadow-inner">
+        <button class="filter-tab active px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 transition-all duration-200" data-filter="all">
+          <i class="fa-solid fa-layer-group mr-1.5"></i>Sob (All)
+        </button>
+        <button class="filter-tab px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-200" data-filter="text">
+          <i class="fa-solid fa-file-lines mr-1.5"></i>Text Note
+        </button>
+        <button class="filter-tab px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-200" data-filter="image">
+          <i class="fa-solid fa-image mr-1.5"></i>Photo
+        </button>
+        <button class="filter-tab px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-200" data-filter="video">
+          <i class="fa-solid fa-video mr-1.5"></i>Video
+        </button>
+      </div>
+
+      <!-- Instant Search Bar -->
+      <div class="relative w-full sm:w-80">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+        <input type="text" id="searchInput" placeholder="Khojun (Search title or note)..." class="w-full bg-slate-900/90 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-indigo-500 text-slate-100 placeholder-slate-500 transition-all shadow-inner">
+      </div>
+
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Dynamic Data Items will be rendered here -->
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
+      <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 mb-4 text-3xl shadow-inner">
+        <i class="fa-regular fa-folder-open"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-300">Kono data paoa jayni!</h3>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-sm leading-relaxed">
+        Uporer "Notun Note / Media Add Korun" button-e click kore text note, image file ba video upload/link save korun.
+      </p>
+    </div>
+
+  </main>
+
+  <!-- SECRET CODE ENTRY MODAL -->
+  <div id="codeModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+      
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600/20 to-violet-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-2xl mb-3 border border-indigo-500/30 shadow-inner">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white">Vault Access Korun</h3>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+          Apnar secret code din. Direct Owner Access-er jonno promo code-o use korte paren.
+        </p>
+      </div>
+
+      <form id="codeForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Secret Vault Code</label>
+          <input type="text" id="vaultCodeInput" placeholder="Ex: MYVAULT123" class="w-full bg-slate-950 border border-slate-800 text-white font-mono tracking-widest uppercase px-4 py-3 rounded-xl focus:outline-none focus:border-indigo-500 text-center text-lg shadow-inner">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-amber-400/90 mb-1.5">
+            <i class="fa-solid fa-ticket mr-1"></i> Promo Code (Optional)
+          </label>
+          <input type="text" id="promoCodeInput" placeholder="Promo code thakle din..." class="w-full bg-slate-950 border border-slate-800 text-amber-300 font-mono px-4 py-2.5 rounded-xl focus:outline-none focus:border-amber-500 text-center text-sm shadow-inner">
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 text-sm">
+          Vault Enter Korun
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ADD / EDIT ITEM MODAL -->
+  <div id="itemModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative my-8">
+      
+      <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-800">
+        <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-square-plus text-indigo-400"></i>
+          <span>Notun Content Add Korun</span>
+        </h3>
+        <button id="closeItemModalBtn" type="button" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="itemForm" class="space-y-4">
+        
+        <!-- Type Selection -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Type Select Korun</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="itemType" value="text" checked class="peer sr-only">
+              <div class="p-3 rounded-xl border border-slate-800 bg-slate-950 text-center text-xs font-semibold text-slate-400 peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 peer-checked:text-indigo-400 transition-all">
+                <i class="fa-solid fa-file-lines block text-lg mb-1"></i> Text Note
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="itemType" value="image" class="peer sr-only">
+              <div class="p-3 rounded-xl border border-slate-800 bg-slate-950 text-center text-xs font-semibold text-slate-400 peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 peer-checked:text-indigo-400 transition-all">
+                <i class="fa-solid fa-image block text-lg mb-1"></i> Image
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="itemType" value="video" class="peer sr-only">
+              <div class="p-3 rounded-xl border border-slate-800 bg-slate-950 text-center text-xs font-semibold text-slate-400 peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 peer-checked:text-indigo-400 transition-all">
+                <i class="fa-solid fa-video block text-lg mb-1"></i> Video
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Title Input -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Title (Sironam)</label>
+          <input type="text" id="itemTitle" placeholder="Keno ei note or media..." required class="w-full bg-slate-950 border border-slate-800 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
+        </div>
+
+        <!-- Media Upload / Link Group (For Image & Video) -->
+        <div id="mediaUrlGroup" class="hidden space-y-3 p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
+          
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400" id="mediaLabel">Media Input Option</span>
+            <span class="text-[11px] text-slate-500">File upload ba direct link</span>
+          </div>
+
+          <!-- Direct File Input -->
+          <div>
+            <label class="block text-xs text-slate-300 font-medium mb-1.5" id="fileInputLabel">
+              <i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> Gallery / Device Folder Theke File Select Korun:
+            </label>
+            <input type="file" id="itemFileInput" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900 rounded-xl border border-slate-800 p-1">
+            <p id="fileUploadStatus" class="text-[11px] text-emerald-400 mt-1 hidden"></p>
+          </div>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-800"></div>
+            <span class="flex-shrink mx-2 text-[10px] text-slate-500 font-semibold uppercase">অথবা (OR LINK)</span>
+            <div class="flex-grow border-t border-slate-800"></div>
+          </div>
+
+          <!-- URL Input -->
+          <div>
+            <input type="url" id="itemMediaUrl" placeholder="Image/Video direct URL or YouTube link..." class="w-full bg-slate-900 border border-slate-800 text-white px-3.5 py-2 rounded-xl focus:outline-none focus:border-indigo-500 text-xs">
+          </div>
+
+          <!-- Preview Container -->
+          <div id="mediaPreviewBox" class="hidden mt-2 p-2 bg-slate-900 rounded-xl border border-slate-800 text-center">
+            <p class="text-[10px] text-slate-400 mb-1">Preview:</p>
+            <div id="previewContent" class="max-h-40 overflow-hidden flex items-center justify-center rounded-lg"></div>
+          </div>
+
+        </div>
+
+        <!-- Content / Note Text -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Details Note Text</label>
+          <textarea id="itemContent" rows="3" placeholder="Aponar kono proyojoniya note ba description ekhane likhun..." class="w-full bg-slate-950 border border-slate-800 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 text-sm"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="saveItemBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 text-sm flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Save Korun</span>
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // --- 1. FIREBASE SETUP & INITIALIZATION ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAs-DemoVaultKey1234567890",
+      authDomain: "vault-sync-app.firebaseapp.com",
+      projectId: "vault-sync-app",
+      storageBucket: "vault-sync-app.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
+    };
+
+    let db = null;
+    let isCloudSyncActive = false;
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        isCloudSyncActive = true;
+      }
+    } catch (e) {
+      console.warn("Firebase operational mode: Local fallback", e);
+    }
+
+    // --- 2. STATE MANAGEMENT ---
+    let currentVaultCode = localStorage.getItem('vault_secret_code') || '';
+    let isOwnerMode = localStorage.getItem('is_owner_mode') === 'true';
+    let items = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let unsubscribeFirestore = null;
+
+    // DOM Elements
+    const codeModal = document.getElementById('codeModal');
+    const codeForm = document.getElementById('codeForm');
+    const vaultCodeInput = document.getElementById('vaultCodeInput');
+      const promoCodeInput = document.getElementById('promoCodeInput');
+    const activeVaultCodeDisplay = document.getElementById('activeVaultCodeDisplay');
+    const vaultStatusBadge = document.getElementById('vaultStatusBadge');
+    const ownerBadge = document.getElementById('ownerBadge');
+    const ownerPanel = document.getElementById('ownerPanel');
+    const ownerVaultsTableList = document.getElementById('ownerVaultsTableList');
+    const refreshOwnerVaults = document.getElementById('refreshOwnerVaults');
+    const switchVaultBtn = document.getElementById('switchVaultBtn');
+    
+    const itemModal = document.getElementById('itemModal');
+    const itemForm = document.getElementById('itemForm');
+    const openNewModalBtn = document.getElementById('openNewModalBtn');
+    const closeItemModalBtn = document.getElementById('closeItemModalBtn');
+    const mediaUrlGroup = document.getElementById('mediaUrlGroup');
+    const mediaLabel = document.getElementById('mediaLabel');
+    const fileInputLabel = document.getElementById('fileInputLabel');
+    const itemFileInput = document.getElementById('itemFileInput');
+    const itemMediaUrl = document.getElementById('itemMediaUrl');
+    const fileUploadStatus = document.getElementById('fileUploadStatus');
+    const mediaPreviewBox = document.getElementById('mediaPreviewBox');
+    const previewContent = document.getElementById('previewContent');
+    
+    const itemsGrid = document.getElementById('itemsGrid');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+
+    // --- 3. TOAST NOTIFICATIONS ---
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const bgColor = type === 'success' ? 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200' :
+                      type === 'error' ? 'bg-rose-900/90 border-rose-500/50 text-rose-200' :
+                      'bg-indigo-900/90 border-indigo-500/50 text-indigo-200';
+                      
+      toast.className = `px-4 py-3 rounded-xl border ${bgColor} backdrop-blur-md text-xs font-medium shadow-2xl flex items-center space-x-2 transition-all duration-300 transform translate-y-2 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // --- 4. PROMO CODE & OWNER MODE ---
+    function checkOwnerStatus() {
+      if (isOwnerMode) {
+        ownerBadge.classList.remove('hidden');
+        ownerBadge.classList.add('flex');
+        ownerPanel.classList.remove('hidden');
+        loadAllVaultsForOwner();
+      } else {
+        ownerBadge.classList.add('hidden');
+        ownerPanel.classList.add('hidden');
+      }
+    }
+
+    async function registerVaultCode(code) {
+      if (!code) return;
+      
+      let registries = JSON.parse(localStorage.getItem('vault_registry_list') || '[]');
+      if (!registries.includes(code)) {
+        registries.push(code);
+        localStorage.setItem('vault_registry_list', JSON.stringify(registries));
+      }
+
+      if (isCloudSyncActive && db) {
+        try {
+          await db.collection('vault_registry').doc(code).set({
+            code: code,
+            lastActive: Date.now()
+          }, { merge: true });
+        } catch (e) {
+          console.warn("Registry sync failed:", e);
+        }
+      }
+    }
+
+    async function loadAllVaultsForOwner() {
+      if (!isOwnerMode) return;
+      
+      let allVaults = [];
+
+      if (isCloudSyncActive && db) {
+        try {
+          const snapshot = await db.collection('vault_registry').get();
+          snapshot.forEach(doc => {
+            allVaults.push(doc.id);
+          });
+        } catch (e) {
+          console.warn("Owner fetch fallback:", e);
+        }
+      }
+
+      let localRegistries = JSON.parse(localStorage.getItem('vault_registry_list') || '[]');
+      localRegistries.forEach(c => {
+        if (!allVaults.includes(c)) allVaults.push(c);
+      });
+
+      if (currentVaultCode && !allVaults.includes(currentVaultCode)) {
+        allVaults.push(currentVaultCode);
+      }
+
+      if (allVaults.length === 0) allVaults = ['DEFAULT_VAULT'];
+
+      ownerVaultsTableList.innerHTML = allVaults.map(code => {
+        const isCurrent = code === currentVaultCode;
+        return `
+          <tr class="hover:bg-slate-900/50 transition">
+            <td class="p-3.5 font-mono font-bold text-amber-300 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-key text-xs text-amber-500"></i>
+              <span>${code}</span>
+              ${isCurrent ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">Active</span>' : ''}
+            </td>
+            <td class="p-3.5 text-slate-400">Multi-Device Cloud Vault</td>
+            <td class="p-3.5">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Online
+              </span>
+            </td>
+            <td class="p-3.5 text-right">
+              <button onclick="switchVaultByOwner('${code}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs transition shadow-md">
+                Open Vault
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.switchVaultByOwner = function(code) {
+      initVault(code);
+      showToast(`Switched to vault: ${code}`, 'success');
+    };
+
+    // --- 5. VAULT INITIALIZATION & REALTIME SYNC ---
+    function initVault(code) {
+      if (!code && !isOwnerMode) {
+        codeModal.classList.remove('hidden');
+        return;
+      }
+
+      if (code) {
+        currentVaultCode = code.trim().toUpperCase();
+        localStorage.setItem('vault_secret_code', currentVaultCode);
+        registerVaultCode(currentVaultCode);
+        
+        activeVaultCodeDisplay.textContent = currentVaultCode;
+        vaultStatusBadge.classList.remove('hidden');
+      }
+
+      codeModal.classList.add('hidden');
+      checkOwnerStatus();
+      subscribeToVaultData();
+    }
+
+    function subscribeToVaultData() {
+      if (!currentVaultCode) return;
+      if (unsubscribeFirestore) unsubscribeFirestore();
+
+      if (isCloudSyncActive && db) {
+        unsubscribeFirestore = db.collection('vaults')
+          .doc(currentVaultCode)
+          .collection('items')
+          .orderBy('createdAt', 'desc')
+          .onSnapshot((snapshot) => {
+            items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            saveToLocalStorage();
+            renderItems();
+          }, (err) => {
+            console.warn("Firestore error, loading local data:", err);
+            loadFromLocalStorage();
+          });
+      } else {
+        loadFromLocalStorage();
+      }
+    }
+
+    function loadFromLocalStorage() {
+      const localData = localStorage.getItem(`vault_data_${currentVaultCode}`);
+      items = localData ? JSON.parse(localData) : [];
+      renderItems();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem(`vault_data_${currentVaultCode}`, JSON.stringify(items));
+    }
+
+    // --- 6. ITEM ADD / DELETE OPERATIONS ---
+    async function addItemToVault(item) {
+      if (isCloudSyncActive && db) {
+        try {
+          await db.collection('vaults').doc(currentVaultCode).collection('items').add(item);
+          showToast('Data synced to cloud successfully!', 'success');
+        } catch (e) {
+          console.warn("Cloud save failed, saving locally:", e);
+          const newItem = { id: 'loc_' + Date.now(), ...item };
+          items.unshift(newItem);
+          saveToLocalStorage();
+          renderItems();
+          showToast('Saved locally!', 'info');
+        }
+      } else {
+        const newItem = { id: 'loc_' + Date.now(), ...item };
+        items.unshift(newItem);
+        saveToLocalStorage();
+        renderItems();
+        showToast('Saved to local vault!', 'success');
+      }
+    }
+
+    window.deleteItemFromVault = async function(itemId) {
+      if (confirm('Apni ki sotti ei item-ti muche phelte chan?')) {
+        if (isCloudSyncActive && db && !itemId.startsWith('loc_')) {
+          try {
+            await db.collection('vaults').doc(currentVaultCode).collection('items').doc(itemId).delete();
+            showToast('Item deleted successfully!', 'success');
+          } catch (e) {
+            console.error("Cloud delete error:", e);
+          }
+        } else {
+          items = items.filter(i => i.id !== itemId);
+          saveToLocalStorage();
+          renderItems();
+          showToast('Item deleted!', 'success');
+        }
+      }
+    };
+
+    window.copyNoteText = function(text) {
+      const tempArea = document.createElement('textarea');
+      tempArea.value = text;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempArea);
+      showToast('Text copied to clipboard!', 'success');
+    };
+
+    // --- 7. RENDERING LOGIC ---
+    function renderItems() {
+      const filtered = items.filter(item => {
+        const matchesFilter = currentFilter === 'all' || item.type === currentFilter;
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              (item.content && item.content.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        itemsGrid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      itemsGrid.innerHTML = filtered.map(item => createCardHTML(item)).join('');
+    }
+
+    function createCardHTML(item) {
+      let mediaContent = '';
+
+      if (item.type === 'image' && item.mediaUrl) {
+        mediaContent = `
+          <div class="aspect-video bg-slate-950 overflow-hidden border-b border-slate-800 relative group">
+            <img src="${item.mediaUrl}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" alt="vault media" loading="lazy">
+          </div>`;
+      } else if (item.type === 'video' && item.mediaUrl) {
+        if (item.mediaUrl.includes('youtube.com') || item.mediaUrl.includes('youtu.be')) {
+          let embedUrl = item.mediaUrl;
+          if (item.mediaUrl.includes('watch?v=')) {
+            embedUrl = item.mediaUrl.replace('watch?v=', 'embed/');
+          } else if (item.mediaUrl.includes('youtu.be/')) {
+            embedUrl = item.mediaUrl.replace('youtu.be/', 'youtube.com/embed/');
+          }
+          mediaContent = `
+            <div class="aspect-video bg-slate-950 border-b border-slate-800">
+              <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>`;
+        } else {
+          mediaContent = `
+            <div class="aspect-video bg-slate-950 border-b border-slate-800">
+              <video src="${item.mediaUrl}" controls class="w-full h-full object-cover"></video>
+            </div>`;
+        }
+      }
+
+      const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('bn-BD', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      }) : 'Ekhon';
+
+      return `
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200">
+          <div>
+            ${mediaContent}
+            <div class="p-5">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                  item.type === 'text' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                  item.type === 'image' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                  'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                }">
+                  <i class="${item.type === 'text' ? 'fa-solid fa-file-lines' : item.type === 'image' ? 'fa-solid fa-image' : 'fa-solid fa-video'} mr-1"></i>
+                  ${item.type}
+                </span>
+                <span class="text-[11px] text-slate-500 font-medium">${dateStr}</span>
+              </div>
+              <h3 class="font-bold text-slate-100 text-base mb-1.5 leading-snug">${escapeHTML(item.title)}</h3>
+              ${item.content ? `<p class="text-slate-300 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed mt-2 p-3 rounded-xl bg-slate-950/40 border border-slate-800/50">${escapeHTML(item.content)}</p>` : ''}
+            </div>
+          </div>
+          
+          <div class="px-5 py-3 border-t border-slate-800/60 bg-slate-900/40 flex items-center justify-between">
+            ${item.content ? `
+              <button onclick="copyNoteText(\`${escapeQuotes(item.content)}\`)" class="text-indigo-400 hover:text-indigo-300 text-xs font-medium flex items-center space-x-1">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            ` : '<span></span>'}
+            
+            <button onclick="deleteItemFromVault('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs font-medium px-2 py-1 rounded transition flex items-center space-x-1">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHTML(str) {
+      return str ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)) : '';
+    }
+
+    function escapeQuotes(str) {
+      return str ? str.replace(/`/g, '\\`').replace(/"/g, '&quot;') : '';
+    }
+
+    // --- 8. EVENT HANDLERS & LISTENERS ---
+    
+    // Code Entry
+    codeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = vaultCodeInput.value;
+      const promo = promoCodeInput.value.trim();
+
+      if (promo === 'fahimlikes69') {
+        isOwnerMode = true;
+        localStorage.setItem('is_owner_mode', 'true');
+        showToast('Owner Mode Unlocked!', 'success');
+      }
+
+      if (code || isOwnerMode) {
+        initVault(code || currentVaultCode || 'DEFAULT_VAULT');
+      } else {
+        showToast('Secret code ba promo code din!', 'error');
+      }
+    });
+
+    switchVaultBtn.addEventListener('click', () => {
+      vaultCodeInput.value = currentVaultCode;
+      codeModal.classList.remove('hidden');
+    });
+
+    refreshOwnerVaults.addEventListener('click', () => {
+      loadAllVaultsForOwner();
+      showToast('Vault list refreshed', 'info');
+    });
+
+    // Modal Control
+    openNewModalBtn.addEventListener('click', () => {
+      itemForm.reset();
+      mediaUrlGroup.classList.add('hidden');
+      mediaPreviewBox.classList.add('hidden');
+      fileUploadStatus.classList.add('hidden');
+      previewContent.innerHTML = '';
+      itemModal.classList.remove('hidden');
+    });
+
+    closeItemModalBtn.addEventListener('click', () => {
+      itemModal.classList.add('hidden');
+    });
+
+    // Dynamic Type Change
+    document.querySelectorAll('input[name="itemType"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const val = e.target.value;
+        itemMediaUrl.value = '';
+        itemFileInput.value = '';
+        mediaPreviewBox.classList.add('hidden');
+        fileUploadStatus.classList.add('hidden');
+
+        if (val === 'text') {
+          mediaUrlGroup.classList.add('hidden');
+        } else {
+          mediaUrlGroup.classList.remove('hidden');
+          
+          if (val === 'image') {
+            mediaLabel.textContent = 'Image Select or Link';
+            fileInputLabel.innerHTML = '<i class="fa-solid fa-image text-indigo-400 mr-1"></i> Gallery / Device Folder Theke Photo Select Korun:';
+            itemFileInput.setAttribute('accept', 'image/*');
+            itemMediaUrl.placeholder = 'Direct Image Link (https://...)...';
+          } else if (val === 'video') {
+            mediaLabel.textContent = 'Video Select or YouTube Link';
+            fileInputLabel.innerHTML = '<i class="fa-solid fa-file-video text-indigo-400 mr-1"></i> Device / Gallery Theke Video File Select Korun:';
+            itemFileInput.setAttribute('accept', 'video/*');
+            itemMediaUrl.placeholder = 'YouTube Link or Video URL...';
+          }
+        }
+      });
+    });
+
+    // Media File Reading (Image & Video support)
+    itemFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      fileUploadStatus.textContent = 'File processing...';
+      fileUploadStatus.classList.remove('hidden');
+
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        itemMediaUrl.value = dataUrl;
+        fileUploadStatus.textContent = `File selected: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+
+        // Render Preview
+        previewContent.innerHTML = '';
+        if (file.type.startsWith('image/')) {
+          previewContent.innerHTML = `<img src="${dataUrl}" class="max-h-36 rounded-lg object-contain">`;
+        } else if (file.type.startsWith('video/')) {
+          previewContent.innerHTML = `<video src="${dataUrl}" class="max-h-36 rounded-lg" controls></video>`;
+        }
+        mediaPreviewBox.classList.remove('hidden');
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    // URL Manual Preview
+    itemMediaUrl.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      const type = document.querySelector('input[name="itemType"]:checked').value;
+
+      if (!url) {
+        mediaPreviewBox.classList.add('hidden');
+        return;
+      }
+
+      previewContent.innerHTML = '';
+      if (type === 'image') {
+        previewContent.innerHTML = `<img src="${url}" class="max-h-36 rounded-lg object-contain" onerror="this.src='https://placehold.co/400x200/0f172a/94a3b8?text=Invalid+Image+URL'">`;
+        mediaPreviewBox.classList.remove('hidden');
+      } else if (type === 'video') {
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+          previewContent.innerHTML = `<p class="text-xs text-indigo-400 font-semibold p-2"><i class="fa-brands fa-youtube text-red-500 mr-1"></i> YouTube Video Link Detected</p>`;
+        } else {
+          previewContent.innerHTML = `<video src="${url}" class="max-h-36 rounded-lg" controls></video>`;
+        }
+        mediaPreviewBox.classList.remove('hidden');
+      }
+    });
+
+    // Form Submission
+    itemForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const type = document.querySelector('input[name="itemType"]:checked').value;
+      const title = document.getElementById('itemTitle').value;
+      const content = document.getElementById('itemContent').value;
+      const mediaUrl = itemMediaUrl.value;
+
+      if (type !== 'text' && !mediaUrl) {
+        showToast('Meherbani kore file select করুন ba media URL din!', 'error');
+        return;
+      }
+
+      const newItem = {
+        type,
+        title,
+        content,
+        mediaUrl: (type !== 'text') ? mediaUrl : '',
+        createdAt: Date.now()
+      };
+
+      await addItemToVault(newItem);
+      itemModal.classList.add('hidden');
+    });
+
+    // Category Tabs
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget;
+        document.querySelectorAll('.filter-tab').forEach(b => {
+          b.classList.remove('bg-indigo-600', 'text-white');
+  b.classList.add('text-slate-400');
+        });
+        target.classList.add('bg-indigo-600', 'text-white');
+        target.classList.remove('text-slate-400');
+        
+        currentFilter = target.dataset.filter;
+        renderItems();
+      });
+    });
+
+    // Search Input Listener
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderItems();
+    });
+
+    // --- 9. APPLICATION STARTUP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      if (currentVaultCode || isOwnerMode) {
+        initVault(currentVaultCode);
+      } else {
+        codeModal.classList.remove('hidden');
+      }
+    });
+
+  </script>
+</body>
+</html>
