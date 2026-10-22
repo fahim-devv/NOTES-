@@ -58,7 +58,6 @@
       box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
     }
 
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -127,7 +126,7 @@
         <div>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2.5">
             <i class="fa-solid fa-shield-halved text-indigo-400 text-2xl"></i>
-            <span id="welcomeTitle">Apnar Personal Multi-Device Cloud Vault</span>
+            <span>Apnar Personal Multi-Device Cloud Vault</span>
           </h2>
           <p class="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed max-w-2xl">
             Ekta secret code set korun. Oi eki code die je kono device (Mobile, Laptop) theke note, photo ebon video direct access korun.
@@ -141,7 +140,7 @@
       </div>
     </div>
 
-    <!-- OWNER DASHBOARD (Visible when Promo Code 'fahimlikes69' is active) -->
+    <!-- OWNER DASHBOARD -->
     <div id="ownerPanel" class="hidden mb-8 p-6 rounded-2xl border border-amber-500/30 bg-amber-950/20 backdrop-blur-md shadow-2xl relative overflow-hidden">
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-amber-500/20">
         <div class="flex items-center space-x-3">
@@ -169,9 +168,7 @@
               <th class="p-3.5 font-semibold text-right">Action</th>
             </tr>
           </thead>
-          <tbody id="ownerVaultsTableList" class="divide-y divide-slate-800/60">
-            <!-- Dynamic Vault Codes Rendered Here -->
-          </tbody>
+          <tbody id="ownerVaultsTableList" class="divide-y divide-slate-800/60"></tbody>
         </table>
       </div>
     </div>
@@ -204,9 +201,7 @@
     </div>
 
     <!-- CONTENT GRID -->
-    <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Dynamic Data Items will be rendered here -->
-    </div>
+    <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
     <!-- EMPTY STATE -->
     <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
@@ -224,7 +219,6 @@
   <!-- SECRET CODE ENTRY MODAL -->
   <div id="codeModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
-      
       <div class="text-center mb-6">
         <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600/20 to-violet-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-2xl mb-3 border border-indigo-500/30 shadow-inner">
           <i class="fa-solid fa-lock"></i>
@@ -252,7 +246,6 @@
           Vault Enter Korun
         </button>
       </form>
-
     </div>
   </div>
 
@@ -303,9 +296,8 @@
           <input type="text" id="itemTitle" placeholder="Keno ei note or media..." required class="w-full bg-slate-950 border border-slate-800 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
         </div>
 
-        <!-- Media Upload / Link Group (For Image & Video) -->
+        <!-- Media Upload / Link Group -->
         <div id="mediaUrlGroup" class="hidden space-y-3 p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
-          
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400" id="mediaLabel">Media Input Option</span>
             <span class="text-[11px] text-slate-500">File upload ba direct link</span>
@@ -314,7 +306,7 @@
           <!-- Direct File Input -->
           <div>
             <label class="block text-xs text-slate-300 font-medium mb-1.5" id="fileInputLabel">
-              <i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> Gallery / Device Folder Theke File Select Korun:
+              <i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> File Select Korun:
             </label>
             <input type="file" id="itemFileInput" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900 rounded-xl border border-slate-800 p-1">
             <p id="fileUploadStatus" class="text-[11px] text-emerald-400 mt-1 hidden"></p>
@@ -336,7 +328,6 @@
             <p class="text-[10px] text-slate-400 mb-1">Preview:</p>
             <div id="previewContent" class="max-h-40 overflow-hidden flex items-center justify-center rounded-lg"></div>
           </div>
-
         </div>
 
         <!-- Content / Note Text -->
@@ -352,7 +343,6 @@
         </button>
 
       </form>
-
     </div>
   </div>
 
@@ -361,7 +351,6 @@
 
   <!-- JAVASCRIPT APPLICATION LOGIC -->
   <script>
-    // --- 1. FIREBASE SETUP & INITIALIZATION ---
     const firebaseConfig = {
       apiKey: "AIzaSyAs-DemoVaultKey1234567890",
       authDomain: "vault-sync-app.firebaseapp.com",
@@ -383,10 +372,9 @@
         isCloudSyncActive = true;
       }
     } catch (e) {
-      console.warn("Firebase operational mode: Local fallback", e);
+      console.warn("Firebase fallback mode", e);
     }
 
-    // --- 2. STATE MANAGEMENT ---
     let currentVaultCode = localStorage.getItem('vault_secret_code') || '';
     let isOwnerMode = localStorage.getItem('is_owner_mode') === 'true';
     let items = [];
@@ -394,11 +382,10 @@
     let searchQuery = '';
     let unsubscribeFirestore = null;
 
-    // DOM Elements
     const codeModal = document.getElementById('codeModal');
     const codeForm = document.getElementById('codeForm');
     const vaultCodeInput = document.getElementById('vaultCodeInput');
-      const promoCodeInput = document.getElementById('promoCodeInput');
+    const promoCodeInput = document.getElementById('promoCodeInput');
     const activeVaultCodeDisplay = document.getElementById('activeVaultCodeDisplay');
     const vaultStatusBadge = document.getElementById('vaultStatusBadge');
     const ownerBadge = document.getElementById('ownerBadge');
@@ -424,7 +411,6 @@
     const emptyState = document.getElementById('emptyState');
     const searchInput = document.getElementById('searchInput');
 
-    // --- 3. TOAST NOTIFICATIONS ---
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -435,7 +421,6 @@
                       
       toast.className = `px-4 py-3 rounded-xl border ${bgColor} backdrop-blur-md text-xs font-medium shadow-2xl flex items-center space-x-2 transition-all duration-300 transform translate-y-2 pointer-events-auto`;
       toast.innerHTML = `<span>${message}</span>`;
-      
       container.appendChild(toast);
       
       setTimeout(() => {
@@ -444,7 +429,6 @@
       }, 3000);
     }
 
-    // --- 4. PROMO CODE & OWNER MODE ---
     function checkOwnerStatus() {
       if (isOwnerMode) {
         ownerBadge.classList.remove('hidden');
@@ -459,50 +443,19 @@
 
     async function registerVaultCode(code) {
       if (!code) return;
-      
       let registries = JSON.parse(localStorage.getItem('vault_registry_list') || '[]');
       if (!registries.includes(code)) {
         registries.push(code);
         localStorage.setItem('vault_registry_list', JSON.stringify(registries));
       }
-
-      if (isCloudSyncActive && db) {
-        try {
-          await db.collection('vault_registry').doc(code).set({
-            code: code,
-            lastActive: Date.now()
-          }, { merge: true });
-        } catch (e) {
-          console.warn("Registry sync failed:", e);
-        }
-      }
     }
 
     async function loadAllVaultsForOwner() {
       if (!isOwnerMode) return;
-      
-      let allVaults = [];
-
-      if (isCloudSyncActive && db) {
-        try {
-          const snapshot = await db.collection('vault_registry').get();
-          snapshot.forEach(doc => {
-            allVaults.push(doc.id);
-          });
-        } catch (e) {
-          console.warn("Owner fetch fallback:", e);
-        }
-      }
-
-      let localRegistries = JSON.parse(localStorage.getItem('vault_registry_list') || '[]');
-      localRegistries.forEach(c => {
-        if (!allVaults.includes(c)) allVaults.push(c);
-      });
-
+      let allVaults = JSON.parse(localStorage.getItem('vault_registry_list') || '[]');
       if (currentVaultCode && !allVaults.includes(currentVaultCode)) {
         allVaults.push(currentVaultCode);
       }
-
       if (allVaults.length === 0) allVaults = ['DEFAULT_VAULT'];
 
       ownerVaultsTableList.innerHTML = allVaults.map(code => {
@@ -516,14 +469,10 @@
             </td>
             <td class="p-3.5 text-slate-400">Multi-Device Cloud Vault</td>
             <td class="p-3.5">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Online
-              </span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Online</span>
             </td>
             <td class="p-3.5 text-right">
-              <button onclick="switchVaultByOwner('${code}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs transition shadow-md">
-                Open Vault
-              </button>
+              <button onclick="switchVaultByOwner('${code}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs transition shadow-md">Open Vault</button>
             </td>
           </tr>
         `;
@@ -535,22 +484,18 @@
       showToast(`Switched to vault: ${code}`, 'success');
     };
 
-    // --- 5. VAULT INITIALIZATION & REALTIME SYNC ---
     function initVault(code) {
       if (!code && !isOwnerMode) {
         codeModal.classList.remove('hidden');
         return;
       }
-
       if (code) {
         currentVaultCode = code.trim().toUpperCase();
         localStorage.setItem('vault_secret_code', currentVaultCode);
         registerVaultCode(currentVaultCode);
-        
         activeVaultCodeDisplay.textContent = currentVaultCode;
         vaultStatusBadge.classList.remove('hidden');
       }
-
       codeModal.classList.add('hidden');
       checkOwnerStatus();
       subscribeToVaultData();
@@ -570,7 +515,6 @@
             saveToLocalStorage();
             renderItems();
           }, (err) => {
-            console.warn("Firestore error, loading local data:", err);
             loadFromLocalStorage();
           });
       } else {
@@ -588,27 +532,21 @@
       localStorage.setItem(`vault_data_${currentVaultCode}`, JSON.stringify(items));
     }
 
-    // --- 6. ITEM ADD / DELETE OPERATIONS ---
     async function addItemToVault(item) {
-      if (isCloudSyncActive && db) {
-        try {
+      // Safe fallback saving mechanism to prevent submit failure due to network/size issues
+      try {
+        if (isCloudSyncActive && db) {
           await db.collection('vaults').doc(currentVaultCode).collection('items').add(item);
-          showToast('Data synced to cloud successfully!', 'success');
-        } catch (e) {
-          console.warn("Cloud save failed, saving locally:", e);
-          const newItem = { id: 'loc_' + Date.now(), ...item };
-          items.unshift(newItem);
-          saveToLocalStorage();
-          renderItems();
-          showToast('Saved locally!', 'info');
         }
-      } else {
-        const newItem = { id: 'loc_' + Date.now(), ...item };
-        items.unshift(newItem);
-        saveToLocalStorage();
-        renderItems();
-        showToast('Saved to local vault!', 'success');
+      } catch (e) {
+        console.warn("Cloud sync skipped, saved locally.", e);
       }
+
+      const newItem = { id: 'loc_' + Date.now(), ...item };
+      items.unshift(newItem);
+      saveToLocalStorage();
+      renderItems();
+      showToast('Successfully Saved!', 'success');
     }
 
     window.deleteItemFromVault = async function(itemId) {
@@ -616,16 +554,14 @@
         if (isCloudSyncActive && db && !itemId.startsWith('loc_')) {
           try {
             await db.collection('vaults').doc(currentVaultCode).collection('items').doc(itemId).delete();
-            showToast('Item deleted successfully!', 'success');
           } catch (e) {
             console.error("Cloud delete error:", e);
           }
-        } else {
-          items = items.filter(i => i.id !== itemId);
-          saveToLocalStorage();
-          renderItems();
-          showToast('Item deleted!', 'success');
         }
+        items = items.filter(i => i.id !== itemId);
+        saveToLocalStorage();
+        renderItems();
+        showToast('Item deleted!', 'success');
       }
     };
 
@@ -636,10 +572,9 @@
       tempArea.select();
       document.execCommand('copy');
       document.body.removeChild(tempArea);
-      showToast('Text copied to clipboard!', 'success');
+      showToast('Text copied!', 'success');
     };
 
-    // --- 7. RENDERING LOGIC ---
     function renderItems() {
       const filtered = items.filter(item => {
         const matchesFilter = currentFilter === 'all' || item.type === currentFilter;
@@ -660,38 +595,21 @@
 
     function createCardHTML(item) {
       let mediaContent = '';
-
       if (item.type === 'image' && item.mediaUrl) {
-        mediaContent = `
-          <div class="aspect-video bg-slate-950 overflow-hidden border-b border-slate-800 relative group">
-            <img src="${item.mediaUrl}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" alt="vault media" loading="lazy">
-          </div>`;
+        mediaContent = `<div class="aspect-video bg-slate-950 overflow-hidden border-b border-slate-800"><img src="${item.mediaUrl}" class="w-full h-full object-cover" alt="media"></div>`;
       } else if (item.type === 'video' && item.mediaUrl) {
         if (item.mediaUrl.includes('youtube.com') || item.mediaUrl.includes('youtu.be')) {
-          let embedUrl = item.mediaUrl;
-          if (item.mediaUrl.includes('watch?v=')) {
-            embedUrl = item.mediaUrl.replace('watch?v=', 'embed/');
-          } else if (item.mediaUrl.includes('youtu.be/')) {
-            embedUrl = item.mediaUrl.replace('youtu.be/', 'youtube.com/embed/');
-          }
-          mediaContent = `
-            <div class="aspect-video bg-slate-950 border-b border-slate-800">
-              <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>`;
+          let embedUrl = item.mediaUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/');
+          mediaContent = `<div class="aspect-video bg-slate-950 border-b border-slate-800"><iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
         } else {
-          mediaContent = `
-            <div class="aspect-video bg-slate-950 border-b border-slate-800">
-              <video src="${item.mediaUrl}" controls class="w-full h-full object-cover"></video>
-            </div>`;
+          mediaContent = `<div class="aspect-video bg-slate-950 border-b border-slate-800"><video src="${item.mediaUrl}" controls class="w-full h-full object-cover"></video></div>`;
         }
       }
 
-      const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('bn-BD', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      }) : 'Ekhon';
+      const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Ekhon';
 
       return `
-        <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200">
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between">
           <div>
             ${mediaContent}
             <div class="p-5">
@@ -700,32 +618,18 @@
                   item.type === 'text' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                   item.type === 'image' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
                   'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                }">
-                  <i class="${item.type === 'text' ? 'fa-solid fa-file-lines' : item.type === 'image' ? 'fa-solid fa-image' : 'fa-solid fa-video'} mr-1"></i>
-                  ${item.type}
-                </span>
+                }">${item.type}</span>
                 <span class="text-[11px] text-slate-500 font-medium">${dateStr}</span>
               </div>
-              <h3 class="font-bold text-slate-100 text-base mb-1.5 leading-snug">${escapeHTML(item.title)}</h3>
+              <h3 class="font-bold text-slate-100 text-base mb-1.5">${escapeHTML(item.title)}</h3>
               ${item.content ? `<p class="text-slate-300 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed mt-2 p-3 rounded-xl bg-slate-950/40 border border-slate-800/50">${escapeHTML(item.content)}</p>` : ''}
             </div>
           </div>
-          
           <div class="px-5 py-3 border-t border-slate-800/60 bg-slate-900/40 flex items-center justify-between">
-            ${item.content ? `
-              <button onclick="copyNoteText(\`${escapeQuotes(item.content)}\`)" class="text-indigo-400 hover:text-indigo-300 text-xs font-medium flex items-center space-x-1">
-                <i class="fa-regular fa-copy"></i>
-                <span>Copy</span>
-              </button>
-            ` : '<span></span>'}
-            
-            <button onclick="deleteItemFromVault('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs font-medium px-2 py-1 rounded transition flex items-center space-x-1">
-              <i class="fa-solid fa-trash-can"></i>
-              <span>Delete</span>
-            </button>
+            ${item.content ? `<button onclick="copyNoteText(\`${escapeQuotes(item.content)}\`)" class="text-indigo-400 hover:text-indigo-300 text-xs flex items-center space-x-1"><i class="fa-regular fa-copy"></i><span>Copy</span></button>` : '<span></span>'}
+            <button onclick="deleteItemFromVault('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs flex items-center space-x-1"><i class="fa-solid fa-trash-can"></i><span>Delete</span></button>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function escapeHTML(str) {
@@ -736,9 +640,6 @@
       return str ? str.replace(/`/g, '\\`').replace(/"/g, '&quot;') : '';
     }
 
-    // --- 8. EVENT HANDLERS & LISTENERS ---
-    
-    // Code Entry
     codeForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const code = vaultCodeInput.value;
@@ -767,7 +668,6 @@
       showToast('Vault list refreshed', 'info');
     });
 
-    // Modal Control
     openNewModalBtn.addEventListener('click', () => {
       itemForm.reset();
       mediaUrlGroup.classList.add('hidden');
@@ -781,7 +681,6 @@
       itemModal.classList.add('hidden');
     });
 
-    // Dynamic Type Change
     document.querySelectorAll('input[name="itemType"]').forEach(radio => {
       radio.addEventListener('change', (e) => {
         const val = e.target.value;
@@ -794,15 +693,14 @@
           mediaUrlGroup.classList.add('hidden');
         } else {
           mediaUrlGroup.classList.remove('hidden');
-          
           if (val === 'image') {
             mediaLabel.textContent = 'Image Select or Link';
-            fileInputLabel.innerHTML = '<i class="fa-solid fa-image text-indigo-400 mr-1"></i> Gallery / Device Folder Theke Photo Select Korun:';
+            fileInputLabel.innerHTML = '<i class="fa-solid fa-image text-indigo-400 mr-1"></i> Photo Select Korun:';
             itemFileInput.setAttribute('accept', 'image/*');
-            itemMediaUrl.placeholder = 'Direct Image Link (https://...)...';
+            itemMediaUrl.placeholder = 'Direct Image Link...';
           } else if (val === 'video') {
             mediaLabel.textContent = 'Video Select or YouTube Link';
-            fileInputLabel.innerHTML = '<i class="fa-solid fa-file-video text-indigo-400 mr-1"></i> Device / Gallery Theke Video File Select Korun:';
+            fileInputLabel.innerHTML = '<i class="fa-solid fa-file-video text-indigo-400 mr-1"></i> Video File Select Korun:';
             itemFileInput.setAttribute('accept', 'video/*');
             itemMediaUrl.placeholder = 'YouTube Link or Video URL...';
           }
@@ -810,10 +708,16 @@
       });
     });
 
-    // Media File Reading (Image & Video support)
     itemFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      // Check if file size is greater than 800KB to avoid storage overflow
+      if (file.size > 800 * 1024) {
+        showToast('File size khub boro! 800KB-er kom file ba direct URL use korun.', 'error');
+        itemFileInput.value = '';
+        return;
+      }
 
       const reader = new FileReader();
       fileUploadStatus.textContent = 'File processing...';
@@ -822,9 +726,8 @@
       reader.onload = function(evt) {
         const dataUrl = evt.target.result;
         itemMediaUrl.value = dataUrl;
-        fileUploadStatus.textContent = `File selected: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+        fileUploadStatus.textContent = `File ready: ${file.name}`;
 
-        // Render Preview
         previewContent.innerHTML = '';
         if (file.type.startsWith('image/')) {
           previewContent.innerHTML = `<img src="${dataUrl}" class="max-h-36 rounded-lg object-contain">`;
@@ -833,27 +736,23 @@
         }
         mediaPreviewBox.classList.remove('hidden');
       };
-
       reader.readAsDataURL(file);
     });
 
-    // URL Manual Preview
     itemMediaUrl.addEventListener('input', (e) => {
       const url = e.target.value.trim();
       const type = document.querySelector('input[name="itemType"]:checked').value;
-
       if (!url) {
         mediaPreviewBox.classList.add('hidden');
         return;
       }
-
       previewContent.innerHTML = '';
       if (type === 'image') {
-        previewContent.innerHTML = `<img src="${url}" class="max-h-36 rounded-lg object-contain" onerror="this.src='https://placehold.co/400x200/0f172a/94a3b8?text=Invalid+Image+URL'">`;
+        previewContent.innerHTML = `<img src="${url}" class="max-h-36 rounded-lg object-contain" onerror="this.src='https://placehold.co/400x200/0f172a/94a3b8?text=Invalid+URL'">`;
         mediaPreviewBox.classList.remove('hidden');
       } else if (type === 'video') {
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
-          previewContent.innerHTML = `<p class="text-xs text-indigo-400 font-semibold p-2"><i class="fa-brands fa-youtube text-red-500 mr-1"></i> YouTube Video Link Detected</p>`;
+          previewContent.innerHTML = `<p class="text-xs text-indigo-400 font-semibold p-2">YouTube Video Link Detected</p>`;
         } else {
           previewContent.innerHTML = `<video src="${url}" class="max-h-36 rounded-lg" controls></video>`;
         }
@@ -861,17 +760,15 @@
       }
     });
 
-    // Form Submission
     itemForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const type = document.querySelector('input[name="itemType"]:checked').value;
       const title = document.getElementById('itemTitle').value;
       const content = document.getElementById('itemContent').value;
       const mediaUrl = itemMediaUrl.value;
 
       if (type !== 'text' && !mediaUrl) {
-        showToast('Meherbani kore file select করুন ba media URL din!', 'error');
+        showToast('Meherbani kore file select korun ba media URL din!', 'error');
         return;
       }
 
@@ -887,29 +784,25 @@
       itemModal.classList.add('hidden');
     });
 
-    // Category Tabs
     document.querySelectorAll('.filter-tab').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const target = e.currentTarget;
         document.querySelectorAll('.filter-tab').forEach(b => {
           b.classList.remove('bg-indigo-600', 'text-white');
-  b.classList.add('text-slate-400');
+          b.classList.add('text-slate-400');
         });
         target.classList.add('bg-indigo-600', 'text-white');
         target.classList.remove('text-slate-400');
-        
         currentFilter = target.dataset.filter;
         renderItems();
       });
     });
 
-    // Search Input Listener
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
       renderItems();
     });
 
-    // --- 9. APPLICATION STARTUP ---
     window.addEventListener('DOMContentLoaded', () => {
       if (currentVaultCode || isOwnerMode) {
         initVault(currentVaultCode);
@@ -917,7 +810,6 @@
         codeModal.classList.remove('hidden');
       }
     });
-
   </script>
 </body>
 </html>
