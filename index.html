@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloud Vault - Secret Code Sync & Owner Access</title>
+  <title>Cloud Vault - Device Local Storage</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,10 +28,6 @@
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -86,15 +82,14 @@
         </div>
         <div>
           <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-indigo-300 via-indigo-100 to-white bg-clip-text text-transparent">
-            Cloud Vault Pro
+            Cloud Vault Device Storage
           </h1>
-          <p class="text-[11px] text-slate-400 font-medium">Multi-Device Sync & Secret Media Store</p>
+          <p class="text-[11px] text-slate-400 font-medium">Direct Device Storage & Secret Vault</p>
         </div>
       </div>
 
       <!-- Active Vault Status & Owner Badge -->
       <div class="flex items-center space-x-2.5 sm:space-x-4">
-        
         <div id="ownerBadge" class="hidden items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-amber-300 text-xs px-3 py-1.5 rounded-full font-semibold shadow-inner animate-pulse">
           <i class="fa-solid fa-crown text-amber-400"></i>
           <span class="hidden sm:inline">OWNER MODE</span>
@@ -107,9 +102,8 @@
 
         <button id="switchVaultBtn" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-xl transition-all duration-200 flex items-center space-x-2 shadow-md shadow-indigo-600/20">
           <i class="fa-solid fa-key text-xs"></i>
-          <span id="switchBtnText">Vault Switch</span>
+          <span>Vault Switch</span>
         </button>
-
       </div>
 
     </div>
@@ -125,11 +119,11 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
         <div>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2.5">
-            <i class="fa-solid fa-shield-halved text-indigo-400 text-2xl"></i>
-            <span>Apnar Personal Multi-Device Cloud Vault</span>
+            <i class="fa-solid fa-hard-drive text-indigo-400 text-2xl"></i>
+            <span>Device Storage Vault System</span>
           </h2>
           <p class="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed max-w-2xl">
-            Ekta secret code set korun. Oi eki code die je kono device (Mobile, Laptop) theke note, photo ebon video direct access korun.
+            Joto file ba note upload korben, shob apnar ei device-er storage (IndexedDB)-ei safe thakbe. Kono size limit nei!
           </p>
         </div>
 
@@ -149,7 +143,7 @@
           </div>
           <div>
             <h3 class="font-bold text-lg text-amber-300">Owner Access Dashboard</h3>
-            <p class="text-xs text-amber-200/70">Shob active secret vault codes ebong data overview.</p>
+            <p class="text-xs text-amber-200/70">Device storage vault codes overview.</p>
           </div>
         </div>
         <button id="refreshOwnerVaults" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5">
@@ -163,7 +157,7 @@
           <thead class="bg-slate-900/80 uppercase text-slate-400 border-b border-slate-800">
             <tr>
               <th class="p-3.5 font-semibold">Vault Code</th>
-              <th class="p-3.5 font-semibold">Total Item Count</th>
+              <th class="p-3.5 font-semibold">Storage Type</th>
               <th class="p-3.5 font-semibold">Status</th>
               <th class="p-3.5 font-semibold text-right">Action</th>
             </tr>
@@ -175,8 +169,6 @@
 
     <!-- CONTROLS & SEARCH -->
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-      
-      <!-- Filter Tabs -->
       <div class="flex bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 w-full sm:w-auto shadow-inner">
         <button class="filter-tab active px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 transition-all duration-200" data-filter="all">
           <i class="fa-solid fa-layer-group mr-1.5"></i>Sob (All)
@@ -192,12 +184,10 @@
         </button>
       </div>
 
-      <!-- Instant Search Bar -->
       <div class="relative w-full sm:w-80">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
         <input type="text" id="searchInput" placeholder="Khojun (Search title or note)..." class="w-full bg-slate-900/90 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-indigo-500 text-slate-100 placeholder-slate-500 transition-all shadow-inner">
       </div>
-
     </div>
 
     <!-- CONTENT GRID -->
@@ -210,7 +200,7 @@
       </div>
       <h3 class="text-lg font-semibold text-slate-300">Kono data paoa jayni!</h3>
       <p class="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-sm leading-relaxed">
-        Uporer "Notun Note / Media Add Korun" button-e click kore text note, image file ba video upload/link save korun.
+        Uporer "Notun Note / Media Add Korun" button-e click kore device storage-এ file save korun.
       </p>
     </div>
 
@@ -225,7 +215,7 @@
         </div>
         <h3 class="text-xl font-bold text-white">Vault Access Korun</h3>
         <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-          Apnar secret code din. Direct Owner Access-er jonno promo code-o use korte paren.
+          Apnar secret code din. Owner Access-er jonno promo code use korte paren.
         </p>
       </div>
 
@@ -249,14 +239,14 @@
     </div>
   </div>
 
-  <!-- ADD / EDIT ITEM MODAL -->
+  <!-- ADD ITEM MODAL -->
   <div id="itemModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative my-8">
       
       <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-800">
         <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-square-plus text-indigo-400"></i>
-          <span>Notun Content Add Korun</span>
+          <span>Device Storage-এ Add Korun</span>
         </h3>
         <button id="closeItemModalBtn" type="button" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-800">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -264,8 +254,6 @@
       </div>
 
       <form id="itemForm" class="space-y-4">
-        
-        <!-- Type Selection -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Type Select Korun</label>
           <div class="grid grid-cols-3 gap-2">
@@ -290,23 +278,15 @@
           </div>
         </div>
 
-        <!-- Title Input -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Title (Sironam)</label>
           <input type="text" id="itemTitle" placeholder="Keno ei note or media..." required class="w-full bg-slate-950 border border-slate-800 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
         </div>
 
-        <!-- Media Upload / Link Group -->
         <div id="mediaUrlGroup" class="hidden space-y-3 p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400" id="mediaLabel">Media Input Option</span>
-            <span class="text-[11px] text-slate-500">File upload ba direct link</span>
-          </div>
-
-          <!-- Direct File Input -->
           <div>
             <label class="block text-xs text-slate-300 font-medium mb-1.5" id="fileInputLabel">
-              <i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> File Select Korun:
+              <i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> Device Folder / Gallery Theke File Select Korun:
             </label>
             <input type="file" id="itemFileInput" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900 rounded-xl border border-slate-800 p-1">
             <p id="fileUploadStatus" class="text-[11px] text-emerald-400 mt-1 hidden"></p>
@@ -318,69 +298,59 @@
             <div class="flex-grow border-t border-slate-800"></div>
           </div>
 
-          <!-- URL Input -->
           <div>
-            <input type="url" id="itemMediaUrl" placeholder="Image/Video direct URL or YouTube link..." class="w-full bg-slate-900 border border-slate-800 text-white px-3.5 py-2 rounded-xl focus:outline-none focus:border-indigo-500 text-xs">
+            <input type="url" id="itemMediaUrl" placeholder="Direct Image/Video URL or YouTube link..." class="w-full bg-slate-900 border border-slate-800 text-white px-3.5 py-2 rounded-xl focus:outline-none focus:border-indigo-500 text-xs">
           </div>
 
-          <!-- Preview Container -->
           <div id="mediaPreviewBox" class="hidden mt-2 p-2 bg-slate-900 rounded-xl border border-slate-800 text-center">
             <p class="text-[10px] text-slate-400 mb-1">Preview:</p>
             <div id="previewContent" class="max-h-40 overflow-hidden flex items-center justify-center rounded-lg"></div>
           </div>
         </div>
 
-        <!-- Content / Note Text -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Details Note Text</label>
           <textarea id="itemContent" rows="3" placeholder="Aponar kono proyojoniya note ba description ekhane likhun..." class="w-full bg-slate-950 border border-slate-800 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-indigo-500 text-sm"></textarea>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" id="saveItemBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 text-sm flex items-center justify-center space-x-2">
           <i class="fa-solid fa-floppy-disk"></i>
-          <span>Save Korun</span>
+          <span>Device Storage-এ Save Korun</span>
         </button>
-
       </form>
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <!-- JAVASCRIPT LOGIC WITH INDEXEDDB (DEVICE STORAGE) -->
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAs-DemoVaultKey1234567890",
-      authDomain: "vault-sync-app.firebaseapp.com",
-      projectId: "vault-sync-app",
-      storageBucket: "vault-sync-app.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdef123456"
-    };
-
     let db = null;
-    let isCloudSyncActive = false;
-
-    try {
-      if (typeof firebase !== 'undefined') {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
-        }
-        db = firebase.firestore();
-        isCloudSyncActive = true;
-      }
-    } catch (e) {
-      console.warn("Firebase fallback mode", e);
-    }
-
     let currentVaultCode = localStorage.getItem('vault_secret_code') || '';
     let isOwnerMode = localStorage.getItem('is_owner_mode') === 'true';
     let items = [];
     let currentFilter = 'all';
     let searchQuery = '';
-    let unsubscribeFirestore = null;
+    let selectedFileBlob = null; // Stores actual binary file for device storage
+
+    // Initialize IndexedDB for heavy device storage
+    function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('CloudVaultDeviceDB', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (event) => {
+          const database = event.target.result;
+          if (!database.objectStoreNames.contains('vault_items')) {
+            const store = database.createObjectStore('vault_items', { keyPath: 'id' });
+            store.createIndex('vaultCode', 'vaultCode', { unique: false });
+          }
+        };
+      });
+    }
 
     const codeModal = document.getElementById('codeModal');
     const codeForm = document.getElementById('codeForm');
@@ -399,7 +369,6 @@
     const openNewModalBtn = document.getElementById('openNewModalBtn');
     const closeItemModalBtn = document.getElementById('closeItemModalBtn');
     const mediaUrlGroup = document.getElementById('mediaUrlGroup');
-    const mediaLabel = document.getElementById('mediaLabel');
     const fileInputLabel = document.getElementById('fileInputLabel');
     const itemFileInput = document.getElementById('itemFileInput');
     const itemMediaUrl = document.getElementById('itemMediaUrl');
@@ -414,10 +383,9 @@
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      
-      const bgColor = type === 'success' ? 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200' :
-                      type === 'error' ? 'bg-rose-900/90 border-rose-500/50 text-rose-200' :
-                      'bg-indigo-900/90 border-indigo-500/50 text-indigo-200';
+      const bgColor = type === 'success' ? 'bg-emerald-900/95 border-emerald-500/50 text-emerald-200' :
+                      type === 'error' ? 'bg-rose-900/95 border-rose-500/50 text-rose-200' :
+                      'bg-indigo-900/95 border-indigo-500/50 text-indigo-200';
                       
       toast.className = `px-4 py-3 rounded-xl border ${bgColor} backdrop-blur-md text-xs font-medium shadow-2xl flex items-center space-x-2 transition-all duration-300 transform translate-y-2 pointer-events-auto`;
       toast.innerHTML = `<span>${message}</span>`;
@@ -467,9 +435,9 @@
               <span>${code}</span>
               ${isCurrent ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">Active</span>' : ''}
             </td>
-            <td class="p-3.5 text-slate-400">Multi-Device Cloud Vault</td>
+            <td class="p-3.5 text-slate-400">Device Local Storage (IndexedDB)</td>
             <td class="p-3.5">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Online</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Local Active</span>
             </td>
             <td class="p-3.5 text-right">
               <button onclick="switchVaultByOwner('${code}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs transition shadow-md">Open Vault</button>
@@ -484,7 +452,7 @@
       showToast(`Switched to vault: ${code}`, 'success');
     };
 
-    function initVault(code) {
+    async function initVault(code) {
       if (!code && !isOwnerMode) {
         codeModal.classList.remove('hidden');
         return;
@@ -498,70 +466,59 @@
       }
       codeModal.classList.add('hidden');
       checkOwnerStatus();
-      subscribeToVaultData();
+      await loadVaultDataFromDB();
     }
 
-    function subscribeToVaultData() {
-      if (!currentVaultCode) return;
-      if (unsubscribeFirestore) unsubscribeFirestore();
+    // Load items from IndexedDB for the current Vault Code
+    async function loadVaultDataFromDB() {
+      if (!db || !currentVaultCode) return;
+      
+      return new Promise((resolve) => {
+        const transaction = db.transaction(['vault_items'], 'readonly');
+        const store = transaction.objectStore('vault_items');
+        const index = store.index('vaultCode');
+        const request = index.getAll(IDBKeyRange.only(currentVaultCode));
 
-      if (isCloudSyncActive && db) {
-        unsubscribeFirestore = db.collection('vaults')
-          .doc(currentVaultCode)
-          .collection('items')
-          .orderBy('createdAt', 'desc')
-          .onSnapshot((snapshot) => {
-            items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            saveToLocalStorage();
-            renderItems();
-          }, (err) => {
-            loadFromLocalStorage();
-          });
-      } else {
-        loadFromLocalStorage();
-      }
+        request.onsuccess = () => {
+          items = request.result.sort((a, b) => b.createdAt - a.createdAt);
+          renderItems();
+          resolve();
+        };
+        request.onerror = () => {
+          items = [];
+          renderItems();
+          resolve();
+        };
+      });
     }
 
-    function loadFromLocalStorage() {
-      const localData = localStorage.getItem(`vault_data_${currentVaultCode}`);
-      items = localData ? JSON.parse(localData) : [];
-      renderItems();
+    async function addItemToDB(item) {
+      if (!db) return;
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['vault_items'], 'readwrite');
+        const store = transaction.objectStore('vault_items');
+        const request = store.put(item);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
     }
 
-    function saveToLocalStorage() {
-      localStorage.setItem(`vault_data_${currentVaultCode}`, JSON.stringify(items));
-    }
-
-    async function addItemToVault(item) {
-      // Safe fallback saving mechanism to prevent submit failure due to network/size issues
-      try {
-        if (isCloudSyncActive && db) {
-          await db.collection('vaults').doc(currentVaultCode).collection('items').add(item);
-        }
-      } catch (e) {
-        console.warn("Cloud sync skipped, saved locally.", e);
-      }
-
-      const newItem = { id: 'loc_' + Date.now(), ...item };
-      items.unshift(newItem);
-      saveToLocalStorage();
-      renderItems();
-      showToast('Successfully Saved!', 'success');
+    async function deleteItemFromDB(itemId) {
+      if (!db) return;
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['vault_items'], 'readwrite');
+        const store = transaction.objectStore('vault_items');
+        const request = store.delete(itemId);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
     }
 
     window.deleteItemFromVault = async function(itemId) {
-      if (confirm('Apni ki sotti ei item-ti muche phelte chan?')) {
-        if (isCloudSyncActive && db && !itemId.startsWith('loc_')) {
-          try {
-            await db.collection('vaults').doc(currentVaultCode).collection('items').doc(itemId).delete();
-          } catch (e) {
-            console.error("Cloud delete error:", e);
-          }
-        }
-        items = items.filter(i => i.id !== itemId);
-        saveToLocalStorage();
-        renderItems();
-        showToast('Item deleted!', 'success');
+      if (confirm('Apni ki sotti ei item-ti device storage theke muche phelte chan?')) {
+        await deleteItemFromDB(itemId);
+        await loadVaultDataFromDB();
+        showToast('Item deleted from device storage!', 'success');
       }
     };
 
@@ -595,14 +552,23 @@
 
     function createCardHTML(item) {
       let mediaContent = '';
-      if (item.type === 'image' && item.mediaUrl) {
-        mediaContent = `<div class="aspect-video bg-slate-950 overflow-hidden border-b border-slate-800"><img src="${item.mediaUrl}" class="w-full h-full object-cover" alt="media"></div>`;
-      } else if (item.type === 'video' && item.mediaUrl) {
-        if (item.mediaUrl.includes('youtube.com') || item.mediaUrl.includes('youtu.be')) {
-          let embedUrl = item.mediaUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/');
+      
+      // Generate Object URL if file blob exists, otherwise use string URL (YouTube or link)
+      let mediaSrc = '';
+      if (item.mediaBlob) {
+        mediaSrc = URL.createObjectURL(item.mediaBlob);
+      } else if (item.mediaUrl) {
+        mediaSrc = item.mediaUrl;
+      }
+
+      if (item.type === 'image' && mediaSrc) {
+        mediaContent = `<div class="aspect-video bg-slate-950 overflow-hidden border-b border-slate-800"><img src="${mediaSrc}" class="w-full h-full object-cover" alt="media"></div>`;
+      } else if (item.type === 'video' && mediaSrc) {
+        if (mediaSrc.includes('youtube.com') || mediaSrc.includes('youtu.be')) {
+          let embedUrl = mediaSrc.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/');
           mediaContent = `<div class="aspect-video bg-slate-950 border-b border-slate-800"><iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
         } else {
-          mediaContent = `<div class="aspect-video bg-slate-950 border-b border-slate-800"><video src="${item.mediaUrl}" controls class="w-full h-full object-cover"></video></div>`;
+          mediaContent = `<div class="aspect-video bg-slate-950 border-b border-slate-800"><video src="${mediaSrc}" controls class="w-full h-full object-cover"></video></div>`;
         }
       }
 
@@ -640,7 +606,7 @@
       return str ? str.replace(/`/g, '\\`').replace(/"/g, '&quot;') : '';
     }
 
-    codeForm.addEventListener('submit', (e) => {
+    codeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const code = vaultCodeInput.value;
       const promo = promoCodeInput.value.trim();
@@ -652,7 +618,7 @@
       }
 
       if (code || isOwnerMode) {
-        initVault(code || currentVaultCode || 'DEFAULT_VAULT');
+        await initVault(code || currentVaultCode || 'DEFAULT_VAULT');
       } else {
         showToast('Secret code ba promo code din!', 'error');
       }
@@ -674,6 +640,7 @@
       mediaPreviewBox.classList.add('hidden');
       fileUploadStatus.classList.add('hidden');
       previewContent.innerHTML = '';
+      selectedFileBlob = null;
       itemModal.classList.remove('hidden');
     });
 
@@ -686,6 +653,7 @@
         const val = e.target.value;
         itemMediaUrl.value = '';
         itemFileInput.value = '';
+        selectedFileBlob = null;
         mediaPreviewBox.classList.add('hidden');
         fileUploadStatus.classList.add('hidden');
 
@@ -694,13 +662,9 @@
         } else {
           mediaUrlGroup.classList.remove('hidden');
           if (val === 'image') {
-            mediaLabel.textContent = 'Image Select or Link';
-            fileInputLabel.innerHTML = '<i class="fa-solid fa-image text-indigo-400 mr-1"></i> Photo Select Korun:';
             itemFileInput.setAttribute('accept', 'image/*');
-            itemMediaUrl.placeholder = 'Direct Image Link...';
+            itemMediaUrl.placeholder = 'Direct Image URL...';
           } else if (val === 'video') {
-            mediaLabel.textContent = 'Video Select or YouTube Link';
-            fileInputLabel.innerHTML = '<i class="fa-solid fa-file-video text-indigo-400 mr-1"></i> Video File Select Korun:';
             itemFileInput.setAttribute('accept', 'video/*');
             itemMediaUrl.placeholder = 'YouTube Link or Video URL...';
           }
@@ -708,40 +672,34 @@
       });
     });
 
+    // Handle file selection directly to binary Blob for device storage
     itemFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Check if file size is greater than 800KB to avoid storage overflow
-      if (file.size > 800 * 1024) {
-        showToast('File size khub boro! 800KB-er kom file ba direct URL use korun.', 'error');
-        itemFileInput.value = '';
-        return;
-      }
+      selectedFileBlob = file; // Store raw file object
+      itemMediaUrl.value = ''; // Clear URL input if file is selected
 
-      const reader = new FileReader();
-      fileUploadStatus.textContent = 'File processing...';
+      fileUploadStatus.textContent = `File ready: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
       fileUploadStatus.classList.remove('hidden');
 
-      reader.onload = function(evt) {
-        const dataUrl = evt.target.result;
-        itemMediaUrl.value = dataUrl;
-        fileUploadStatus.textContent = `File ready: ${file.name}`;
-
-        previewContent.innerHTML = '';
-        if (file.type.startsWith('image/')) {
-          previewContent.innerHTML = `<img src="${dataUrl}" class="max-h-36 rounded-lg object-contain">`;
-        } else if (file.type.startsWith('video/')) {
-          previewContent.innerHTML = `<video src="${dataUrl}" class="max-h-36 rounded-lg" controls></video>`;
-        }
-        mediaPreviewBox.classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
+      const blobUrl = URL.createObjectURL(file);
+      previewContent.innerHTML = '';
+      if (file.type.startsWith('image/')) {
+        previewContent.innerHTML = `<img src="${blobUrl}" class="max-h-36 rounded-lg object-contain">`;
+      } else if (file.type.startsWith('video/')) {
+        previewContent.innerHTML = `<video src="${blobUrl}" class="max-h-36 rounded-lg" controls></video>`;
+      }
+      mediaPreviewBox.classList.remove('hidden');
     });
 
     itemMediaUrl.addEventListener('input', (e) => {
       const url = e.target.value.trim();
       const type = document.querySelector('input[name="itemType"]:checked').value;
+      if (url) {
+        selectedFileBlob = null; // Clear file if URL is provided
+        itemFileInput.value = '';
+      }
       if (!url) {
         mediaPreviewBox.classList.add('hidden');
         return;
@@ -765,23 +723,28 @@
       const type = document.querySelector('input[name="itemType"]:checked').value;
       const title = document.getElementById('itemTitle').value;
       const content = document.getElementById('itemContent').value;
-      const mediaUrl = itemMediaUrl.value;
+      const mediaUrl = itemMediaUrl.value.trim();
 
-      if (type !== 'text' && !mediaUrl) {
+      if (type !== 'text' && !selectedFileBlob && !mediaUrl) {
         showToast('Meherbani kore file select korun ba media URL din!', 'error');
         return;
       }
 
       const newItem = {
+        id: 'dev_' + Date.now() + Math.random().toString(36.substring(2, 7)),
+        vaultCode: currentVaultCode,
         type,
         title,
         content,
-        mediaUrl: (type !== 'text') ? mediaUrl : '',
+        mediaBlob: selectedFileBlob || null,
+        mediaUrl: mediaUrl || '',
         createdAt: Date.now()
       };
 
-      await addItemToVault(newItem);
+      await addItemToDB(newItem);
+      await loadVaultDataFromDB();
       itemModal.classList.add('hidden');
+      showToast('Successfully saved to Device Storage!', 'success');
     });
 
     document.querySelectorAll('.filter-tab').forEach(btn => {
@@ -803,11 +766,17 @@
       renderItems();
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      if (currentVaultCode || isOwnerMode) {
-        initVault(currentVaultCode);
-      } else {
-        codeModal.classList.remove('hidden');
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await initIndexedDB();
+        if (currentVaultCode || isOwnerMode) {
+          await initVault(currentVaultCode || 'DEFAULT_VAULT');
+        } else {
+          codeModal.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error("IndexedDB initialization failed:", err);
+        showToast('Device storage initialization failed!', 'error');
       }
     });
   </script>
